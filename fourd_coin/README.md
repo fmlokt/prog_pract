@@ -96,11 +96,12 @@ tails face (dark).
 |---|---|
 | `spherinder.py` | math core: 4D rotations, perspective projection, closed-form slices |
 | `render_static.py` | matplotlib renders: the PNG stills and GIFs below |
-| `build_interactive.py` | generates `spherinder_interactive.html` |
-| `spherinder_interactive.html` | self-contained interactive explorer (open in any browser, works offline, follows light/dark theme): sliders for the xw/yw/zw rotation angles, a double-rotation spin mode, and sliders for tilt α and slice position t |
+| `build_interactive.py` | generates `spherinder_interactive.html` (inlines the vendored three.js) |
+| `vendor/three.module.js` | three.js r170, vendored so the built page works offline |
+| `spherinder_interactive.html` | cinematic WebGL one-pager (open in any browser, works offline). All 4D math runs in GLSL vertex shaders — static geometry, uniforms drive the rotation and the slice. An autonomous ~40 s choreography loops: double-rotation shadow → tilt upright → a glowing slice sweeps through the ghost (the shrinking coins) → flat scan (balls popping in and out, tails-first) → unwind. Drag to orbit, scroll to zoom; honors `prefers-reduced-motion`; `?static=SECONDS` freezes the timeline at any moment |
 
-Run with `pip install numpy matplotlib plotly`, then
-`python render_static.py` and `python build_interactive.py`.
+Run with `pip install numpy matplotlib`, then `python render_static.py`;
+`python build_interactive.py` needs only the Python standard library.
 
 ## Renders
 
