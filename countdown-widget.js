@@ -21,17 +21,16 @@
 //   2. Long-press your Lock Screen -> Customize -> add a Scriptable widget
 //      (rectangular, inline, or circular).
 //   3. Tap the widget and choose this script.
-//   4. In the widget's "Parameter" field, provide the dates and an optional
-//      title, separated by "|":
+//   4. In the widget's "Parameter" field, provide the dates separated by "|":
 //
-//         START | END | TITLE
+//         START | END
 //
 //      Examples:
-//         2026-01-01 | 2026-12-31 | The Year
-//         2026-09-01 08:00 | 2027-06-15 | School Year
+//         2026-01-01 | 2026-12-31
+//         2026-09-01 08:00 | 2027-06-15
 //
 //      You may also give just an END date (start defaults to DEFAULT_START):
-//         2026-12-31 | New Year
+//         2026-12-31
 //
 // Dates are parsed as LOCAL time. Accepted formats:
 //   YYYY-MM-DD
@@ -42,13 +41,11 @@
 // ----- Defaults (used when no widget parameter is provided) -----------------
 const DEFAULT_START = "2026-01-01 00:00"; // 0% reference for the progress bar
 const DEFAULT_END = "2026-12-31 00:00"; // countdown target / 100% reference
-const DEFAULT_TITLE = "Countdown"; // label shown on the rectangular widget
 
 // ----- Parse configuration --------------------------------------------------
 const config = parseParameter(args.widgetParameter);
 const start = parseDate(config.start);
 const end = parseDate(config.end);
-const title = config.title;
 
 // ----- Compute remaining time + progress ------------------------------------
 const now = new Date();
@@ -57,7 +54,7 @@ const progress = computeProgress(now, start, end); // 0..1
 
 // ----- Build the widget -----------------------------------------------------
 const family = config.family || "accessoryRectangular";
-const widget = createWidget(remaining, progress, title, family);
+const widget = createWidget(remaining, progress, family);
 
 if (config.runsInWidget) {
   Script.setWidget(widget);
@@ -75,41 +72,27 @@ Script.complete();
 // Functions
 // ============================================================================
 
-// Parse the widget parameter string into { start, end, title }.
+// Parse the widget parameter string into { start, end }.
 // Supported forms:
-//   "START | END | TITLE"
 //   "START | END"
-//   "END | TITLE"   (single date -> treated as the end date)
-//   "END"
+//   "END"   (single date -> treated as the end date; start stays default)
 function parseParameter(param) {
   const out = {
     start: DEFAULT_START,
     end: DEFAULT_END,
-    title: DEFAULT_TITLE,
     family: config_family(),
     runsInWidget: typeof args !== "undefined" && args.runsInWidget,
   };
   if (param && typeof param === "string" && param.trim().length) {
-    const parts = param.split("|").map((p) => p.trim());
-    const dateCount = parts.filter((p) => looksLikeDate(p)).length;
-
-    if (dateCount >= 2) {
-      // START | END | [TITLE]
+    const parts = param.split("|").map((p) => p.trim()).filter((p) => p.length);
+    if (parts.length >= 2) {
       out.start = parts[0];
       out.end = parts[1];
-      if (parts[2] && parts[2].length) out.title = parts[2];
-    } else {
-      // END | [TITLE]  (start stays at the default reference)
-      if (parts[0] && parts[0].length) out.end = parts[0];
-      if (parts[1] && parts[1].length) out.title = parts[1];
+    } else if (parts.length === 1) {
+      out.end = parts[0];
     }
   }
   return out;
-}
-
-// Rough check whether a field is a date rather than a title.
-function looksLikeDate(str) {
-  return /^\d{4}-\d{2}-\d{2}/.test(String(str).trim());
 }
 
 // Determine which widget family we're running as.
@@ -164,12 +147,11 @@ function computeProgress(now, start, end) {
 }
 
 // Build the Scriptable widget for the given family.
-function createWidget(r, progress, title, family) {
+function createWidget(r, progress, family) {
   const w = new ListWidget();
   w.backgroundColor = new Color("#000000", 0); // transparent on lock screen
 
   const accent = new Color("#4DA6FF"); // number color
-  const dim = Color.dynamic(new Color("#8E8E93"), new Color("#8E8E93"));
 
   if (family === "accessoryInline") {
     // Single line rendered by iOS on the Lock Screen date line: ASCII bar.
@@ -178,7 +160,7 @@ function createWidget(r, progress, title, family) {
   }
 
   if (family === "accessoryCircular") {
-    // Show the progress as a percentage value only (no label/title).
+    // Show the progress as a percentage value only.
     const stack = w.addStack();
     stack.layoutVertically();
     stack.centerAlignContent();
@@ -189,13 +171,6 @@ function createWidget(r, progress, title, family) {
   }
 
   // Default: accessoryRectangular (also used for systemSmall preview).
-  const header = w.addText(r.past ? title + " (ago)" : title);
-  header.font = Font.mediumSystemFont(12);
-  header.textColor = dim;
-  header.lineLimit = 1;
-
-  w.addSpacer(3);
-
   const row = w.addStack();
   row.centerAlignContent();
 
