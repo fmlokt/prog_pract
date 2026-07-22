@@ -178,17 +178,13 @@ function createWidget(r, progress, title, family) {
   }
 
   if (family === "accessoryCircular") {
-    // Show the progress as a percentage value.
+    // Show the progress as a percentage value only (no label/title).
     const stack = w.addStack();
     stack.layoutVertically();
     stack.centerAlignContent();
     const num = stack.addText(`${Math.round(progress * 100)}%`);
     num.font = Font.boldSystemFont(20);
     num.centerAlignText();
-    const lbl = stack.addText("done");
-    lbl.font = Font.systemFont(9);
-    lbl.textColor = dim;
-    lbl.centerAlignText();
     return w;
   }
 
