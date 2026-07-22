@@ -180,9 +180,13 @@ function addUnit(stack, value, label, accent) {
   lbl.leftAlignText();
 }
 
-// Build the one-line string for the inline accessory family.
+// Build the one-line string for the inline accessory family (the slot on the
+// Lock Screen's date line). Space is very tight here, so output just the days
+// and hours. A short title is prefixed only if one was provided; the built-in
+// default title is omitted to keep it compact.
 function inlineText(r, title) {
-  const when = r.past ? "ago" : "left";
-  if (r.days > 0) return `${title}: ${r.days}d ${r.hours}h ${when}`;
-  return `${title}: ${r.hours}h ${when}`;
+  const core = `${r.days}d ${r.hours}h`;
+  const hasCustomTitle = title && title !== DEFAULT_TITLE;
+  const prefix = hasCustomTitle ? `${title}: ` : "";
+  return `${prefix}${core}`;
 }
