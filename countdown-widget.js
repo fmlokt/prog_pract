@@ -171,8 +171,10 @@ function createWidget(r, progress, family) {
     stack.layoutVertically();
     stack.centerAlignContent();
     const num = stack.addText(`${Math.round(progress * 100)}%`);
-    num.font = Font.boldSystemFont(20);
+    num.font = Font.boldSystemFont(15);
     num.centerAlignText();
+    num.lineLimit = 1;
+    num.minimumScaleFactor = 0.5; // shrink to fit rather than truncate to "..."
     return w;
   }
 
