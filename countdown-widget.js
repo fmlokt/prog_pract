@@ -43,9 +43,9 @@ const DEFAULT_START = "2026-01-01 00:00"; // 0% reference for the progress bar
 const DEFAULT_END = "2026-12-31 00:00"; // countdown target / 100% reference
 
 // ----- Parse configuration --------------------------------------------------
-const config = parseParameter(args.widgetParameter);
-const start = parseDate(config.start);
-const end = parseDate(config.end);
+const cfg = parseParameter(args.widgetParameter);
+const start = parseDate(cfg.start);
+const end = parseDate(cfg.end);
 
 // ----- Compute remaining time + progress ------------------------------------
 const now = new Date();
@@ -53,10 +53,10 @@ const remaining = computeRemaining(now, end);
 const progress = computeProgress(now, start, end); // 0..1
 
 // ----- Build the widget -----------------------------------------------------
-const family = config.family || "accessoryRectangular";
+const family = cfg.family || "accessoryRectangular";
 const widget = createWidget(remaining, progress, family);
 
-if (config.runsInWidget) {
+if (cfg.runsInWidget) {
   Script.setWidget(widget);
 } else {
   // When run inside the app, preview according to the chosen family.
@@ -95,9 +95,15 @@ function parseParameter(param) {
   return out;
 }
 
-// Determine which widget family we're running as.
+// Determine which widget family we're running as. Check args.widgetFamily
+// first, then Scriptable's global `config.widgetFamily` (the reliable source
+// for accessory widgets). Note: this global is NOT shadowed here because the
+// local config object was renamed to `cfg`.
 function config_family() {
   if (typeof args !== "undefined" && args.widgetFamily) return args.widgetFamily;
+  if (typeof config !== "undefined" && config && config.widgetFamily) {
+    return config.widgetFamily;
+  }
   return null;
 }
 
