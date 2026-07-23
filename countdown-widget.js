@@ -11,7 +11,8 @@
 //   * accessoryRectangular / systemSmall : days + hours remaining to the end.
 //   * accessoryInline  (Lock Screen date line) : ASCII progress bar [===.....]
 //     of 10 sections, filling as now moves from start -> end.
-//   * accessoryCircular : the same progress as a percentage value.
+//   * accessoryCircular : the same progress as a ring, with the remaining
+//     time shown inside as "DD:hh" (days:hours).
 //
 // In every case the countdown TARGET is the end date; the start date is used
 // only as the 0% reference for the progress bar / percentage.
@@ -39,8 +40,8 @@
 // ============================================================================
 
 // ----- Defaults (used when no widget parameter is provided) -----------------
-const DEFAULT_START = "2026-01-01 00:00"; // 0% reference for the progress bar
-const DEFAULT_END = "2026-12-31 00:00"; // countdown target / 100% reference
+const DEFAULT_START = "2026-06-21 00:00"; // 0% reference for the progress bar
+const DEFAULT_END = "2026-09-18 00:00"; // countdown target / 100% reference
 
 // ----- Parse configuration --------------------------------------------------
 const cfg = parseParameter(args.widgetParameter);
@@ -166,15 +167,19 @@ function createWidget(r, progress, family) {
   }
 
   if (family === "accessoryCircular") {
-    // Show the progress as a percentage value only.
-    const stack = w.addStack();
-    stack.layoutVertically();
-    stack.centerAlignContent();
-    const num = stack.addText(`${Math.round(progress * 100)}%`);
-    num.font = Font.boldSystemFont(15);
-    num.centerAlignText();
-    num.lineLimit = 1;
-    num.minimumScaleFactor = 0.5; // shrink to fit rather than truncate to "..."
+    // Progress drawn as a ring; the remaining time sits inside as "DD:hh".
+    w.backgroundImage = ringImage(progress, accent);
+
+    w.addSpacer();
+    const row = w.addStack();
+    row.addSpacer();
+    const t = row.addText(`${pad(r.days)}:${pad(r.hours)}`);
+    t.font = Font.boldSystemFont(14);
+    t.textColor = Color.white();
+    t.lineLimit = 1;
+    t.minimumScaleFactor = 0.4; // shrink to fit rather than truncate to "..."
+    row.addSpacer();
+    w.addSpacer();
     return w;
   }
 
@@ -210,4 +215,58 @@ function progressBar(progress, sections) {
   const filled = Math.round(progress * sections);
   const empty = sections - filled;
   return "[" + "=".repeat(filled) + ".".repeat(empty) + "]";
+}
+
+// Zero-pad a number to two digits ("5" -> "05").
+function pad(n) {
+  return String(n).padStart(2, "0");
+}
+
+// Draw a circular progress ring as an Image for the accessoryCircular slot.
+// A faint full-circle track sits behind a coloured arc that sweeps clockwise
+// from the top (12 o'clock) proportionally to `progress` (0..1).
+function ringImage(progress, color) {
+  const size = 200; // drawn large; iOS scales it down into the circular slot
+  const lineWidth = 20;
+  const inset = lineWidth / 2 + 2;
+
+  const ctx = new DrawContext();
+  ctx.size = new Size(size, size);
+  ctx.opaque = false;
+  ctx.respectScreenScale = true;
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - inset;
+
+  // Track: full faint circle.
+  ctx.setLineWidth(lineWidth);
+  ctx.setStrokeColor(new Color("#8E8E93", 0.35));
+  const track = new Path();
+  track.addEllipse(new Rect(inset, inset, size - 2 * inset, size - 2 * inset));
+  ctx.addPath(track);
+  ctx.strokePath();
+
+  // Progress arc: approximated with a dense poly-line from -90deg clockwise.
+  if (progress > 0) {
+    const startAngle = -90;
+    const endAngle = -90 + progress * 360;
+    const points = [];
+    for (let a = startAngle; a <= endAngle; a += 2) {
+      const rad = (a * Math.PI) / 180;
+      points.push(new Point(cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)));
+    }
+    // Guarantee the arc reaches its exact end angle.
+    const radEnd = (endAngle * Math.PI) / 180;
+    points.push(new Point(cx + radius * Math.cos(radEnd), cy + radius * Math.sin(radEnd)));
+
+    ctx.setLineWidth(lineWidth);
+    ctx.setStrokeColor(color);
+    const arc = new Path();
+    arc.addLines(points);
+    ctx.addPath(arc);
+    ctx.strokePath();
+  }
+
+  return ctx.getImage();
 }
