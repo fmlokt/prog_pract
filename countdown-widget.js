@@ -8,11 +8,11 @@
 // Counts down to an END date. Depending on the widget family it shows either
 // the remaining time or the progress travelled from a START date to the END:
 //
-//   * accessoryRectangular / systemSmall : days + hours remaining to the end.
+//   * accessoryRectangular / systemSmall : weeks + hours remaining to the end.
 //   * accessoryInline  (Lock Screen date line) : ASCII progress bar [===.....]
 //     of 10 sections, filling as now moves from start -> end.
 //   * accessoryCircular : the same progress as a ring, with the remaining
-//     time shown inside as "DD:hh" (days:hours).
+//     time shown inside as "WW:hh" (weeks:hours).
 //
 // In every case the countdown TARGET is the end date; the start date is used
 // only as the 0% reference for the progress bar / percentage.
@@ -132,17 +132,18 @@ function parseDate(str) {
   );
 }
 
-// Compute the remaining days/hours between now and the end date.
+// Compute the remaining time between now and the end date, split into whole
+// weeks plus the leftover hours (0..167) so no time is dropped.
 function computeRemaining(now, end) {
   let diffMs = end.getTime() - now.getTime();
   const past = diffMs < 0;
   diffMs = Math.abs(diffMs);
 
   const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(totalHours / 24);
-  const hours = totalHours % 24;
+  const weeks = Math.floor(totalHours / (24 * 7));
+  const weekHours = totalHours % (24 * 7);
 
-  return { days, hours, past };
+  return { weeks, weekHours, past };
 }
 
 // Compute progress from start -> end as a fraction in [0, 1].
@@ -173,7 +174,7 @@ function createWidget(r, progress, family) {
     w.addSpacer();
     const row = w.addStack();
     row.addSpacer();
-    const t = row.addText(`${pad(r.days)}:${pad(r.hours)}`);
+    const t = row.addText(`${pad(r.weeks)}:${pad(r.weekHours)}`);
     t.font = Font.boldSystemFont(14);
     t.textColor = Color.white();
     t.lineLimit = 1;
@@ -187,9 +188,9 @@ function createWidget(r, progress, family) {
   const row = w.addStack();
   row.centerAlignContent();
 
-  addUnit(row, r.days, r.days === 1 ? "day" : "days", accent);
+  addUnit(row, r.weeks, r.weeks === 1 ? "week" : "weeks", accent);
   row.addSpacer(8);
-  addUnit(row, r.hours, r.hours === 1 ? "hr" : "hrs", accent);
+  addUnit(row, r.weekHours, r.weekHours === 1 ? "hr" : "hrs", accent);
 
   return w;
 }
