@@ -174,7 +174,7 @@ function createWidget(r, progress, family) {
     w.addSpacer();
     const row = w.addStack();
     row.addSpacer();
-    const t = row.addText(`${pad(r.weeks)}:${pad(r.weekDays)}`);
+    const t = row.addText(`${r.weeks}:${r.weekDays}`);
     t.font = Font.boldSystemFont(14);
     t.textColor = Color.white();
     t.lineLimit = 1;
@@ -216,11 +216,6 @@ function progressBar(progress, sections) {
   const filled = Math.round(progress * sections);
   const empty = sections - filled;
   return "[" + "=".repeat(filled) + ".".repeat(empty) + "]";
-}
-
-// Zero-pad a number to two digits ("5" -> "05").
-function pad(n) {
-  return String(n).padStart(2, "0");
 }
 
 // Draw a circular progress ring as an Image for the accessoryCircular slot.
