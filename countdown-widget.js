@@ -163,7 +163,8 @@ function createWidget(r, progress, family) {
 
   if (family === "accessoryInline") {
     // Single line rendered by iOS on the Lock Screen date line: ASCII bar.
-    w.addText(progressBar(progress, 10));
+    const bar = w.addText(progressBar(progress, 10));
+    bar.font = Font.regularMonospacedSystemFont(13);
     return w;
   }
 
@@ -175,7 +176,7 @@ function createWidget(r, progress, family) {
     const row = w.addStack();
     row.addSpacer();
     const t = row.addText(`${r.weeks}:${r.weekDays}`);
-    t.font = Font.boldSystemFont(14);
+    t.font = Font.boldMonospacedSystemFont(14);
     t.textColor = Color.white();
     t.lineLimit = 1;
     t.minimumScaleFactor = 0.4; // shrink to fit rather than truncate to "..."
@@ -201,12 +202,12 @@ function addUnit(stack, value, label, accent) {
   s.layoutVertically();
 
   const num = s.addText(String(value));
-  num.font = Font.boldSystemFont(22);
+  num.font = Font.boldMonospacedSystemFont(22);
   num.textColor = accent;
   num.leftAlignText();
 
   const lbl = s.addText(label);
-  lbl.font = Font.systemFont(10);
+  lbl.font = Font.regularMonospacedSystemFont(10);
   lbl.textColor = new Color("#8E8E93");
   lbl.leftAlignText();
 }
