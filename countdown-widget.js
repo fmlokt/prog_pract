@@ -216,7 +216,7 @@ function addUnit(stack, value, label, accent) {
 function progressBar(progress, sections) {
   const filled = Math.round(progress * sections);
   const empty = sections - filled;
-  return "[" + "=".repeat(filled) + ".".repeat(empty) + "]";
+  return "[" + "=".repeat(filled) + "-".repeat(empty) + "]";
 }
 
 // Draw a circular progress ring as an Image for the accessoryCircular slot.
