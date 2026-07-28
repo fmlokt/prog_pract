@@ -8,11 +8,11 @@
 // Counts down to an END date. Depending on the widget family it shows either
 // the remaining time or the progress travelled from a START date to the END:
 //
-//   * accessoryRectangular / systemSmall : weeks + hours remaining to the end.
+//   * accessoryRectangular / systemSmall : weeks + days remaining to the end.
 //   * accessoryInline  (Lock Screen date line) : ASCII progress bar [===.....]
 //     of 10 sections, filling as now moves from start -> end.
 //   * accessoryCircular : the same progress as a ring, with the remaining
-//     time shown inside as "WW:hh" (weeks:hours).
+//     time shown inside as "WW:dd" (weeks:days).
 //
 // In every case the countdown TARGET is the end date; the start date is used
 // only as the 0% reference for the progress bar / percentage.
@@ -133,17 +133,17 @@ function parseDate(str) {
 }
 
 // Compute the remaining time between now and the end date, split into whole
-// weeks plus the leftover hours (0..167) so no time is dropped.
+// weeks plus the leftover days (0..6) so no time is dropped.
 function computeRemaining(now, end) {
   let diffMs = end.getTime() - now.getTime();
   const past = diffMs < 0;
   diffMs = Math.abs(diffMs);
 
-  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const weeks = Math.floor(totalHours / (24 * 7));
-  const weekHours = totalHours % (24 * 7);
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const weeks = Math.floor(totalDays / 7);
+  const weekDays = totalDays % 7;
 
-  return { weeks, weekHours, past };
+  return { weeks, weekDays, past };
 }
 
 // Compute progress from start -> end as a fraction in [0, 1].
@@ -174,7 +174,7 @@ function createWidget(r, progress, family) {
     w.addSpacer();
     const row = w.addStack();
     row.addSpacer();
-    const t = row.addText(`${pad(r.weeks)}:${pad(r.weekHours)}`);
+    const t = row.addText(`${pad(r.weeks)}:${pad(r.weekDays)}`);
     t.font = Font.boldSystemFont(14);
     t.textColor = Color.white();
     t.lineLimit = 1;
@@ -190,7 +190,7 @@ function createWidget(r, progress, family) {
 
   addUnit(row, r.weeks, r.weeks === 1 ? "week" : "weeks", accent);
   row.addSpacer(8);
-  addUnit(row, r.weekHours, r.weekHours === 1 ? "hr" : "hrs", accent);
+  addUnit(row, r.weekDays, r.weekDays === 1 ? "day" : "days", accent);
 
   return w;
 }
